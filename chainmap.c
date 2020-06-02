@@ -31,7 +31,14 @@ static PyObject *chainmap_subscript(PyChainMap *self, PyObject *key) {
     Py_ssize_t ix;
     PyObject *value;
     for (Py_ssize_t i = 0; i < PyList_GET_SIZE(self->maps); i++) {
-        PyDictObject *mp = (PyDictObject*)PyList_GET_ITEM(self->maps, i);
+        PyObject *o = PyList_GET_ITEM(self->maps, i);
+        // TODO handle other types of maps
+        if (!PyDict_CheckExact(o)) {
+            PyErr_Format(PyExc_TypeError, "'%.200s' object is not subscriptable", Py_TYPE(o)->tp_name);
+            return NULL;
+        }
+
+        PyDictObject *mp = (PyDictObject*)o;
 
         ix = mp->ma_keys->dk_lookup(mp, key, hash, &value);
         if (ix == DKIX_ERROR) {
