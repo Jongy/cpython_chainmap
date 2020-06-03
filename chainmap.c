@@ -62,8 +62,9 @@ static int chainmap_ass_sub(PyChainMap *self, PyObject *v, PyObject *w) {
 }
 
 static void chainmap_dealloc(PyChainMap *self) {
+    PyObject_GC_UnTrack(self);
     Py_DECREF(self->maps);
-    PyObject_Del((PyObject*)self);
+    PyObject_GC_Del((PyObject*)self);
 }
 
 static PyMappingMethods chainmap_as_mapping = {
@@ -97,6 +98,12 @@ static int chainmap_init(PyChainMap *self, PyObject *args, PyObject *kwds) {
     return 0;
 }
 
+static int chainamp_traverse(PyChainMap *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->maps);
+    return 0;
+}
+
 static PyTypeObject ChainMap_type = {
     PyVarObject_HEAD_INIT(&PyType_Type, 0)
     "chainmap.ChainMap",
@@ -104,7 +111,8 @@ static PyTypeObject ChainMap_type = {
     .tp_itemsize = 0,
     .tp_dealloc = (destructor)chainmap_dealloc,
     .tp_as_mapping = &chainmap_as_mapping,
-    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
+    .tp_traverse = (traverseproc)chainamp_traverse,
     .tp_methods = chainmap_methods,
     .tp_init = (initproc)chainmap_init,
     .tp_new = PyType_GenericNew,
