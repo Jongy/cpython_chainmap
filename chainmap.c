@@ -80,22 +80,39 @@ static PyMethodDef chainmap_methods[] = {
 static PyTypeObject ChainMap_type;
 
 static int chainmap_init(PyChainMap *self, PyObject *args, PyObject *kwds) {
+    PyObject *dict = NULL;
     assert(Py_IS_TYPE(self, &ChainMap_type));
 
     if (!_PyArg_NoKeywords("ChainMap", kwds)) {
-        return -1;
+        goto out;
     }
 
     self->maps = (PyListObject*)PyType_GenericAlloc(&PyList_Type, 0);
     if (0 > PyList_Type.tp_init((PyObject*)self->maps, args, kwds)) {
-        Py_DECREF(self->maps);
-        return -1;
+        goto out_maps;
     }
 
-    // TODO make sure they are all dicts / mappings whatever
-    // TODO insert empty dict if no maps were given
+    if (PyList_GET_SIZE(self->maps) == 0) {
+        PyObject *dict = PyDict_New();
+        if (!dict) {
+            goto out_maps;
+        }
+
+        if (0 > PyList_Append((PyObject*)self->maps, dict)) {
+            goto out_dict;
+        }
+
+        Py_DECREF(dict);
+    }
 
     return 0;
+
+out_dict:
+    Py_DECREF(dict);
+out_maps:
+    Py_DECREF(self->maps);
+out:
+    return -1;
 }
 
 static int chainamp_traverse(PyChainMap *self, visitproc visit, void *arg)
