@@ -115,6 +115,34 @@ out:
     return -1;
 }
 
+static PyObject *chainmap_maps_get(PyChainMap *self, void *Py_UNUSED(ignored))
+{
+    Py_INCREF(self->maps);
+    return (PyObject*)self->maps;
+}
+
+static int chainmap_maps_set(PyChainMap *self, PyObject *o, void *Py_UNUSED(ignored))
+{
+    if (o) {
+        if (!PyList_CheckExact(o)) {
+            PyErr_SetString(PyExc_TypeError, "maps must be a list");
+            return -1;
+        }
+
+        Py_INCREF(o);
+        Py_SETREF(self->maps, (PyListObject*)o);
+        return 0;
+    } else {
+        PyErr_SetString(PyExc_TypeError, "maps may not be deleted");
+        return -1;
+    }
+}
+
+static PyGetSetDef chainmap_getset[] = {
+    { "maps", (getter)chainmap_maps_get, (setter)chainmap_maps_set, "maps list", NULL },
+    { 0 },
+};
+
 static int chainamp_traverse(PyChainMap *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->maps);
@@ -131,6 +159,7 @@ static PyTypeObject ChainMap_type = {
     .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,
     .tp_traverse = (traverseproc)chainamp_traverse,
     .tp_methods = chainmap_methods,
+    .tp_getset = chainmap_getset,
     .tp_init = (initproc)chainmap_init,
     .tp_new = PyType_GenericNew,
 };

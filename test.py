@@ -17,6 +17,12 @@ b["c"] = 7
 assert x["b"] == 6
 assert x["c"] == 7
 
+x = ChainMap()
+assert x.maps == [{}]
+
+x.maps = [{"a": 4}]
+assert x["a"] == 4
+
 x = ChainMap((1, ))
 try:
     x[5]
